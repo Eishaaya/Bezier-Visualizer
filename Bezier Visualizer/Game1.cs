@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+
 using System.Collections.Generic;
 
 namespace Bezier_Visualizer
@@ -63,8 +64,35 @@ namespace Bezier_Visualizer
             ks = Keyboard.GetState();
             var mousePos = new Vector2(ms.Position.X, ms.Position.Y);
             var mouseDown = ms.LeftButton == ButtonState.Pressed;
-
-            if (draggedPoint != null)
+         
+            
+            if (pointMaker.check(mousePos, mouseDown) && !prevDown)
+            {
+                if (draggedPoint == null)
+                {
+                    draggedPoint = new Sprite(draggedTexture, mousePos, Color.White, 0, SpriteEffects.None, new Vector2(10, 10), 1, 1);
+                }
+            }
+            else if (delete.check(mousePos, mouseDown))
+            {
+                if (draggedPoint != null)
+                {
+                    if (grabbedIndex >= 0)
+                    {
+                        points.RemoveAt(grabbedIndex);
+                    }
+                    draggedPoint = null;
+                }
+            }
+            else if (clear.check(mousePos, mouseDown))
+            {
+                points.Clear();
+            }
+            else if (run.check(mousePos, mouseDown))
+            {
+                ;
+            }
+            else if (draggedPoint != null)
             {
                 draggedPoint.Location = mousePos;
                 if (ms.RightButton == ButtonState.Pressed && !prevDown)
@@ -89,25 +117,7 @@ namespace Bezier_Visualizer
                     draggedPoint = null;
                 }
             }
-            else
-            {
-                if (pointMaker.check(mousePos, mouseDown))
-                {
-                    draggedPoint = new Sprite(draggedTexture, mousePos, Color.White, 0, SpriteEffects.None, new Vector2(10, 10), 1, 1);
-                }
-                else if (delete.check(mousePos, mouseDown))
-                {
-                    ;
-                }
-                else if (clear.check(mousePos, mouseDown))
-                {
-                    ;
-                }
-                else if (run.check(mousePos, mouseDown))
-                {
-                    ;
-                }
-            }
+
             prevDown = mouseDown;
         }
         protected override void Draw(GameTime gameTime)
