@@ -44,10 +44,12 @@
     <Compile Include="AnimatingSprite.cs" />
     <Compile Include="BezierFuncs.cs" />
     <Compile Include="Button.cs" />
+    <Compile Include="ButtonLabel.cs" />
     <Compile Include="Enemy.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="FrameObject.cs" />
     <Compile Include="Game1.cs" />
+    <Compile Include="Label.cs" />
     <Compile Include="ObjectPool.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

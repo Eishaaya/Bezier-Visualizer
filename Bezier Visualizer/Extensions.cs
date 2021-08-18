@@ -72,6 +72,11 @@ namespace Bezier_Visualizer
             return result;
         }
 
+        public static Vector2 ConvertPos(this Vector2 location, Vector2 scale, Vector2 offset)
+        {
+            return (location - offset) / scale;
+        }
+
         #region behaviors
 
         public static void Idle(this Enemy enemy)

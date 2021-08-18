@@ -27,6 +27,7 @@ namespace Bezier_Visualizer
             ZigZag,
             EaseInOut,
         }
+
         Vector2 multiplyer;
         public float Rotation { get; private set; }
         public Vector2 Location { get; private set; }
