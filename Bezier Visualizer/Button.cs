@@ -10,17 +10,17 @@ namespace Bezier_Visualizer
 {
     class Button : Sprite
     {
-        Color OriginalColor;
-        public Color HoverColor;
-        public Color ClickedColor;
-        public bool hold;
-        public bool held;
-        public bool prevDown;
+        public Color NormalColor { get; set; }
+        public Color HoverColor { get; set; }
+        public Color ClickedColor { get; set; }
+        public bool Hold { get; set; }
+        public bool Held { get; set; }
+        public bool PrevDown { get; set; }
         public override Rectangle Hitbox
         {
             get
             {
-                return new Rectangle((int)Location.X, (int)Location.Y, (int)(Image.Width * Scale), (int)(Image.Height * Scale));
+                return new Rectangle((int)(Location.X - Origin.X), (int)(Location.Y - Origin.Y), (int)(Image.Width * Scale), (int)(Image.Height * Scale));
             }
         }
         public Button(Texture2D image, Vector2 location, Color color, float rotation, SpriteEffects effect, Vector2 origin, float superscale, float depth, Color hovercolor, Color clickedcolor)
@@ -28,9 +28,9 @@ namespace Bezier_Visualizer
         {
             HoverColor = hovercolor;
             ClickedColor = clickedcolor;
-            OriginalColor = color;
-            hold = false;
-            prevDown = false;
+            NormalColor = color;
+            Hold = false;
+            PrevDown = false;
         }
         public virtual bool check(Vector2 cursor, bool isclicked)
         {
@@ -39,22 +39,22 @@ namespace Bezier_Visualizer
                 if (!isclicked)
                 {
                     Color = HoverColor;
-                    hold = false;
-                    prevDown = false;
+                    Hold = false;
+                    PrevDown = false;
                 }
                 else
                 {
                     Color = ClickedColor;
-                    hold = prevDown;
-                    prevDown = true;
+                    Hold = PrevDown;
+                    PrevDown = true;
                     return true;
                 }
             }
             else
             {
-                if (!held)
+                if (!Held)
                 {
-                    Color = OriginalColor;
+                    Color = NormalColor;
                 }
                 else
                 {
