@@ -49,6 +49,18 @@
 /processorParam:TextureFormat=Color
 /build:DeleteButton.png
 
+#begin Highlight.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Highlight.png
+
 #begin Line.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -97,6 +109,13 @@
 /processorParam:TextureFormat=Color
 /build:Point.png
 
+#begin RightFont.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:RightFont.spritefont
+
 #begin RunButton.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -108,4 +127,16 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:RunButton.png
+
+#begin Short Highlight.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Short Highlight.png
 

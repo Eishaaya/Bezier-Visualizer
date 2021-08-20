@@ -10,7 +10,7 @@ namespace Bezier_Visualizer
 {
     class Label : VisualObject
     {
-        string text;
+        public string Text { get; private set; }
         public SpriteFont Font { get; }
         TimeSpan time;
         TimeSpan tick;
@@ -23,7 +23,7 @@ namespace Bezier_Visualizer
         public Label(SpriteFont font, Color color, Vector2 location, string text, TimeSpan lifetime, Vector2 Origin, float Rotation, SpriteEffects Effect, float Scale, float Depth)
         : base (location, color, Origin, Rotation, Effect, Scale, Depth)
         {
-            this.text = text;
+            this.Text = text;
             Font = font;
             time = lifetime;            
         }
@@ -36,28 +36,28 @@ namespace Bezier_Visualizer
             }
         }
 
-        public void Text (string text)
+        public void setText (string text)
         {
-            this.text = text;
+            this.Text = text;
         }
-        public void Text (double number, int maxDigits)
+        public void setText (double number, int maxDigits)
         {
-            text = Math.Round(number, maxDigits).ToString();
+            Text = Math.Round(number, maxDigits).ToString();
         }
 
         public void Clear ()
         {
-            text = "";
+            Text = "";
         }
 
         public void Add (char character)
         {
-            text += character;
+            Text += character;
         }
 
         public void Print(SpriteBatch batch)
         {
-            batch.DrawString(Font, text, Location + offset, Color, rotation, Origin, Scale, effect, Depth);
+            batch.DrawString(Font, Text, Location + offset, Color, rotation, Origin, Scale, effect, Depth);
         }
     }
 }

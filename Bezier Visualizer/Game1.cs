@@ -21,12 +21,13 @@ namespace Bezier_Visualizer
         MouseState ms;
         KeyboardState ks;
         bool prevDown;
-        int grabbedIndex;
+        int grabbedIndex;        
         ScalableSprite graphBackGround;
         ScalableSprite midBeam;
         List<ScalableSprite> gridLines;
         Sprite drawnLine;
         Vector2 offSet;
+        float gridWidth;
         Sprite settingsBox;
 
         Texture2D draggedTexture;
@@ -35,6 +36,9 @@ namespace Bezier_Visualizer
         ButtonLabel xLabel;
         ButtonLabel yLabel;
         ButtonLabel arrangementLabel;
+        bool anyKeyPressed;
+
+        int newNumber;
 
         public Game1()
         {
@@ -47,20 +51,24 @@ namespace Bezier_Visualizer
         protected override void Initialize()
         {
             //tell chris to remember the number
-
+            base.Initialize();
+        }
+        protected override void LoadContent()
+        {
+            spriteBatch = new SpriteBatch(GraphicsDevice);
             ms = new MouseState();
             ks = new KeyboardState();
             points = new List<Button>();
             gridLines = new List<ScalableSprite>();
             draggedPoint = null;
             prevDown = false;
+            anyKeyPressed = false;
             grabbedIndex = -1;
 
+            gridWidth = bounds.Y / 2;
             offSet = new Vector2(0, bounds.Y / 4);
-
             draggedTexture = Content.Load<Texture2D>("Point");
 
-            
 
             graphBackGround = new ScalableSprite(Content.Load<Texture2D>("Pixel"), Vector2.Zero, Color.LightGray, 0, SpriteEffects.None, Vector2.Zero, new Vector2(540, 1080), 1);
             midBeam = new ScalableSprite(Content.Load<Texture2D>("Pixel"), new Vector2(0, offSet.Y), Color.Black, 0, SpriteEffects.None, new Vector2(0, .5f), new Vector2(540, 10), 1);
@@ -82,17 +90,26 @@ namespace Bezier_Visualizer
                     gridLines.Add(new ScalableSprite(Content.Load<Texture2D>("Pixel"), new Vector2(i * bounds.Y / lineAmount, 0), Color.Black, 0, SpriteEffects.None, new Vector2(.5f, 0), new Vector2(2, 1080), 1));
                 }
             }
-            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(bounds.Y / 2, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);
+
+            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);
             drawnLine = new Sprite(Content.Load<Texture2D>("Line"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(6), 1, 1);
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             delete = new Button(Content.Load<Texture2D>("DeleteButton"), new Vector2(bounds.X - 200, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             clear = new Button(Content.Load<Texture2D>("ClearButton"), new Vector2(bounds.X - 100, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
-            base.Initialize();
-        }
-        protected override void LoadContent()
-        {
-            spriteBatch = new SpriteBatch(GraphicsDevice);
+
+
+            arrangementLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Short Highlight"), new Vector2(gridWidth + 259, run.Image.Height + 300),
+                                                          Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
+                                               new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 269, run.Image.Height + 324 - 18), "", TimeSpan.Zero));
+
+            xLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Highlight"), new Vector2(gridWidth + 50, run.Image.Height + 50),
+                                                Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
+                                     new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 74 - 18), "", TimeSpan.Zero));
+
+            yLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Highlight"), new Vector2(gridWidth + 50, run.Image.Height + 150),
+                                    Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
+                         new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 174 - 18), "", TimeSpan.Zero));
         }
 
         protected override void UnloadContent()
@@ -106,6 +123,8 @@ namespace Bezier_Visualizer
 
             var mousePos = new Vector2(ms.Position.X, ms.Position.Y);
             var mouseDown = ms.LeftButton == ButtonState.Pressed;
+            var midDown = ms.MiddleButton == ButtonState.Pressed;
+
             if (bezier != null)
             {
                 bezier.Update(gameTime);
@@ -119,7 +138,102 @@ namespace Bezier_Visualizer
 
             if (selectedPoint != null)
             {
+                if (arrangementLabel.Clicked || arrangementLabel.Check(mousePos, mouseDown))
+                {
+                    if (ks.GetPressedKeys().Length > 0)
+                    {
+                        if (!anyKeyPressed)
+                        {
+                            anyKeyPressed = true;
+                            var input = ks.GetPressedKeys()[0].ToString();
 
+                            int tempNum;
+                            var worked = int.TryParse(input[1].ToString(), out tempNum);
+
+                            if (!worked)
+                            {
+                                if (ks.IsKeyDown(Keys.Back))
+                                {
+                                    arrangementLabel.Clicked = false;
+                                }
+                                if (ks.IsKeyDown(Keys.Enter))
+                                {
+                                    if (newNumber >= 0 && newNumber < points.Count)
+                                    {
+                                        for (int i = grabbedIndex; i < points.Count - 1; i++)
+                                        {
+                                            points[i] = points[i + 1];
+                                        }
+
+                                        for (int i = points.Count - 1; i > newNumber; i--)
+                                        {
+                                            points[i] = points[i - 1];
+                                        }
+
+                                        points[newNumber] = selectedPoint;
+
+                                        grabbedIndex = newNumber;
+                                        selectedPoint = points[newNumber];
+                                        arrangementLabel.Clicked = false;
+
+                                        ColorPoints();
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                arrangementLabel.Label.Add(input[1]);
+                                newNumber = int.Parse(arrangementLabel.Label.Text);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        anyKeyPressed = false;
+                    }
+                    xLabel.Clicked = false;
+                    yLabel.Clicked = false;                    
+                }
+                else if (xLabel.Check(mousePos, mouseDown))
+                {
+                    yLabel.Clicked = false;
+                    arrangementLabel.Clicked = false;
+                }
+                else if (yLabel.Check(mousePos, mouseDown))
+                {
+                    xLabel.Clicked = false;
+                    arrangementLabel.Clicked = false;
+                }
+                else if (mouseDown && mousePos.X < gridWidth)
+                {
+                    selectedPoint = null;
+                    grabbedIndex = -1;
+                    xLabel.Clicked = false;
+                    yLabel.Clicked = false;
+                    arrangementLabel.Clicked = false;
+                }
+                else
+                {
+                    var coords = selectedPoint.Location.ConvertPos(new Vector2(gridWidth), offSet);
+                    if (!arrangementLabel.Clicked)
+                    {
+                        arrangementLabel.Label.setText(grabbedIndex, 0);
+                    }
+                    if (!xLabel.Clicked)
+                    {
+                        xLabel.Label.setText(coords.X, 5);
+                    }
+                    if (!yLabel.Clicked)
+                    {
+                        yLabel.Label.setText(coords.Y, 5);
+                    }
+                }
+            }
+            else
+            {
+                xLabel.Label.Clear();
+                yLabel.Label.Clear();
+                arrangementLabel.Label.Clear();
             }
 
             if (pointMaker.check(mousePos, mouseDown) && !prevDown && bezier == null)
@@ -136,7 +250,7 @@ namespace Bezier_Visualizer
                 if (bezier != null)
                 {
                     bezier = null;
-                }                
+                }
                 DeletePoint();
             }
             else if (clear.check(mousePos, mouseDown))
@@ -145,6 +259,7 @@ namespace Bezier_Visualizer
             }
             else if (run.check(mousePos, mouseDown))
             {
+                DeletePoint();
                 if (points.Count > 1)
                 {
                     double[] pointsX = new double[points.Count];
@@ -152,12 +267,12 @@ namespace Bezier_Visualizer
 
                     for (int i = 0; i < points.Count; i++)
                     {
-                        var coords = points[i].Location.ConvertPos(new Vector2(bounds.Y / 2), offSet);
+                        var coords = points[i].Location.ConvertPos(new Vector2(gridWidth), offSet);
                         pointsX[i] = coords.X;
                         pointsY[i] = coords.Y;
                     }
                     bezier = new Bezier2D(new Bezier(5, pointsX, new double[] { 0, 1 }),
-                                          new Bezier(5, new double[] { 0, 1 }, pointsY), new Vector2(bounds.Y / 2));
+                                          new Bezier(5, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
                 }
             }
             else if (draggedPoint != null)
@@ -166,23 +281,7 @@ namespace Bezier_Visualizer
             }
             else if (bezier == null)
             {
-                for (int i = 0; i < points.Count; i++)
-                {
-                    var point = points[i];
-                    if (i != grabbedIndex)
-                    {
-                        if (point.check(mousePos, mouseDown) && !prevDown)
-                        {
-                            selectedPoint = null;
-                            SetDraggedPoint(mousePos, i);
-                        }
-                        else if (point.check(mousePos, ms.MiddleButton == ButtonState.Pressed))
-                        {
-                            selectedPoint = points[i];
-                            grabbedIndex = i;
-                        }
-                    }
-                }
+                CheckPoints(mousePos, mouseDown, midDown);
             }
 
             prevDown = mouseDown;
@@ -208,10 +307,9 @@ namespace Bezier_Visualizer
             }
         }
 
-
         void PlacePoint()
         {
-            if (draggedPoint.Location.X > bounds.Y / 2 || draggedPoint.Location.X < 0 || draggedPoint.Location.Y > bounds.Y || draggedPoint.Location.Y < 0)
+            if (draggedPoint.Location.X > gridWidth || draggedPoint.Location.X < 0 || draggedPoint.Location.Y > bounds.Y || draggedPoint.Location.Y < 0)
             {
                 return;
             }
@@ -244,6 +342,7 @@ namespace Bezier_Visualizer
             grabbedIndex = index;
         }
 
+        #region seperatedBlocks
         void DragLogic(Vector2 mousePos, bool mouseDown)
         {
             draggedPoint.Location = mousePos;
@@ -256,6 +355,33 @@ namespace Bezier_Visualizer
                 PlacePoint();
             }
         }
+
+        void CheckPoints(Vector2 mousePos, bool mouseDown, bool midDown)
+        {
+            for (int i = 0; i < points.Count; i++)
+            {
+                var point = points[i];
+                if (i != grabbedIndex || selectedPoint == null)
+                {
+                    if (point.check(mousePos, mouseDown) && !prevDown)
+                    {
+                        selectedPoint = null;
+                        SetDraggedPoint(mousePos, i);
+                    }
+                    else if (point.check(mousePos, midDown))
+                    {
+                        selectedPoint = points[i];
+                        grabbedIndex = i;
+
+                        xLabel.Clicked = false;
+                        yLabel.Clicked = false;
+                        arrangementLabel.Clicked = false;
+                    }
+                }
+            }
+        }
+        #endregion
+
         protected override void Draw(GameTime gameTime)
         {
             spriteBatch.Begin();
@@ -291,6 +417,10 @@ namespace Bezier_Visualizer
             delete.Draw(spriteBatch);
             clear.Draw(spriteBatch);
             run.Draw(spriteBatch);
+
+            xLabel.Draw(spriteBatch);
+            yLabel.Draw(spriteBatch);
+            arrangementLabel.Draw(spriteBatch);
 
             spriteBatch.End();
             base.Draw(gameTime);
