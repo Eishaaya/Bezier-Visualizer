@@ -38,7 +38,10 @@ namespace Bezier_Visualizer
         ButtonLabel arrangementLabel;
         bool anyKeyPressed;
 
-        int newNumber;
+        float newNumber;
+
+        Dictionary<ButtonLabel, Func<bool>> mapping;
+        Dictionary<Keys, string> keyStrings;
 
         public Game1()
         {
@@ -108,10 +111,42 @@ namespace Bezier_Visualizer
                                      new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 74 - 18), "", TimeSpan.Zero));
 
             yLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Highlight"), new Vector2(gridWidth + 50, run.Image.Height + 150),
-                                    Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
-                         new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 174 - 18), "", TimeSpan.Zero));
+                                                Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
+                                    new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 174 - 18), "", TimeSpan.Zero));
+
+
+            mapping = new Dictionary<ButtonLabel, Func<bool>>()
+            {
+                [arrangementLabel] = SwapArrangment,
+                [xLabel] = SetX,
+                [yLabel] = SetY
+            };
+
+            keyStrings = new Dictionary<Keys, string>()
+            {
+                [Keys.D1] = "1",
+                [Keys.D2] = "2",
+                [Keys.D3] = "3",
+                [Keys.D4] = "4",
+                [Keys.D5] = "5",
+                [Keys.D6] = "6",
+                [Keys.D7] = "7",
+                [Keys.D8] = "8",
+                [Keys.D9] = "9",
+                [Keys.D0] = "0",
+
+                [Keys.OemMinus] = "-",
+                [Keys.Decimal] = ".",
+                [Keys.OemPeriod] = "."
+            };
+
+            //Func<int, int, int> sumFunction = mapping[0];
+            //sumFunction(5, 5);
         }
 
+        private void Add(int x, int y) { x += y; }
+
+        private int Subtract(int x, int y) { return x - y; }
         protected override void UnloadContent()
         {
         }
@@ -136,81 +171,24 @@ namespace Bezier_Visualizer
                 drawnLine.Location = new Vector2(-1000);
             }
 
+
             if (selectedPoint != null)
             {
                 if (arrangementLabel.Clicked || arrangementLabel.Check(mousePos, mouseDown))
                 {
-                    if (ks.GetPressedKeys().Length > 0)
-                    {
-                        if (!anyKeyPressed)
-                        {
-                            anyKeyPressed = true;
-                            var input = ks.GetPressedKeys()[0].ToString();
-
-                            int tempNum;
-                            var worked = int.TryParse(input[1].ToString(), out tempNum);
-
-                            if (!worked)
-                            {
-                                if (ks.IsKeyDown(Keys.Back))
-                                {
-                                    arrangementLabel.Clicked = false;
-                                }
-                                if (ks.IsKeyDown(Keys.Enter))
-                                {
-                                    if (newNumber >= 0 && newNumber < points.Count)
-                                    {
-                                        for (int i = grabbedIndex; i < points.Count - 1; i++)
-                                        {
-                                            points[i] = points[i + 1];
-                                        }
-
-                                        for (int i = points.Count - 1; i > newNumber; i--)
-                                        {
-                                            points[i] = points[i - 1];
-                                        }
-
-                                        points[newNumber] = selectedPoint;
-
-                                        grabbedIndex = newNumber;
-                                        selectedPoint = points[newNumber];
-                                        arrangementLabel.Clicked = false;
-
-                                        ColorPoints();
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                arrangementLabel.Label.Add(input[1]);
-                                newNumber = int.Parse(arrangementLabel.Label.Text);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        anyKeyPressed = false;
-                    }
-                    xLabel.Clicked = false;
-                    yLabel.Clicked = false;                    
+                    InputLogic(arrangementLabel, xLabel, yLabel);
                 }
-                else if (xLabel.Check(mousePos, mouseDown))
+                else if (xLabel.Clicked || xLabel.Check(mousePos, mouseDown))
                 {
-                    yLabel.Clicked = false;
-                    arrangementLabel.Clicked = false;
+                    InputLogic(xLabel, arrangementLabel, yLabel);
                 }
-                else if (yLabel.Check(mousePos, mouseDown))
+                else if (yLabel.Clicked || yLabel.Check(mousePos, mouseDown))
                 {
-                    xLabel.Clicked = false;
-                    arrangementLabel.Clicked = false;
+                    InputLogic(yLabel, arrangementLabel, xLabel);
                 }
                 else if (mouseDown && mousePos.X < gridWidth)
                 {
-                    selectedPoint = null;
-                    grabbedIndex = -1;
-                    xLabel.Clicked = false;
-                    yLabel.Clicked = false;
-                    arrangementLabel.Clicked = false;
+                    CancelSelection();
                 }
                 else
                 {
@@ -229,6 +207,8 @@ namespace Bezier_Visualizer
                     }
                 }
             }
+
+
             else
             {
                 xLabel.Label.Clear();
@@ -259,7 +239,9 @@ namespace Bezier_Visualizer
             }
             else if (run.check(mousePos, mouseDown))
             {
+                CancelSelection();
                 DeletePoint();
+                CheckPoints(mousePos, mouseDown, midDown);
                 if (points.Count > 1)
                 {
                     double[] pointsX = new double[points.Count];
@@ -285,6 +267,17 @@ namespace Bezier_Visualizer
             }
 
             prevDown = mouseDown;
+        }
+
+        #region PointPlacing
+
+        void CancelSelection()
+        {
+            selectedPoint = null;
+            grabbedIndex = -1;
+            xLabel.Clicked = false;
+            yLabel.Clicked = false;
+            arrangementLabel.Clicked = false;
         }
 
         void DeletePoint()
@@ -342,6 +335,8 @@ namespace Bezier_Visualizer
             grabbedIndex = index;
         }
 
+        #endregion
+
         #region seperatedBlocks
         void DragLogic(Vector2 mousePos, bool mouseDown)
         {
@@ -354,6 +349,99 @@ namespace Bezier_Visualizer
             {
                 PlacePoint();
             }
+        }
+
+        void InputLogic (ButtonLabel label, params ButtonLabel[] others)
+        {
+            //Loop through pressed keys
+            //Create dictionary that maps from (key) -> (action)
+
+            if (ks.GetPressedKeys().Length > 0)
+            {
+                if (!anyKeyPressed)
+                {
+                    anyKeyPressed = true;
+                    var input = ks.GetPressedKeys()[0];
+
+                    var numberInputed = keyStrings.ContainsKey(input);
+
+                    if (!numberInputed)
+                    {
+                        if (ks.IsKeyDown(Keys.Back))
+                        {
+                            label.Clicked = false;
+                        }
+                        if (ks.IsKeyDown(Keys.Enter))
+                        {
+                            var parseable = float.TryParse(label.Label.Text, out newNumber);
+
+                            if (!parseable || !mapping[label]())
+                            {
+                                label.Clicked = false;
+                                return;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        label.Label.Add(keyStrings[input][0]);
+                    }
+                }
+            }
+            else
+            {
+                anyKeyPressed = false;
+            }
+            foreach (var button in others)
+            {
+                button.Clicked = false;
+            }
+        }
+
+        bool SwapArrangment ()
+        {
+            var intNumber = (int)newNumber;
+            if (intNumber >= 0 && intNumber < points.Count)
+            {
+                for (int i = grabbedIndex; i < points.Count - 1; i++)
+                {
+                    points[i] = points[i + 1];
+                }
+
+                for (int i = points.Count - 1; i > intNumber; i--)
+                {
+                    points[i] = points[i - 1];
+                }
+
+                points[intNumber] = selectedPoint;
+
+                grabbedIndex = intNumber;
+                selectedPoint = points[intNumber];
+                arrangementLabel.Clicked = false;
+
+                ColorPoints();
+                return true;
+            }
+            return false;
+        }
+
+        bool SetX ()
+        {
+            if (newNumber >= 0 && newNumber <= 1)
+            {
+                selectedPoint.Location = new Vector2(newNumber * gridWidth, selectedPoint.Location.Y);
+                xLabel.Clicked = false;
+            }
+            return false;
+        }
+        bool SetY()
+        {
+            if (newNumber >= -.5 && newNumber <= 1.5)
+            {
+                selectedPoint.Location = new Vector2(selectedPoint.Location.X, newNumber * gridWidth + offSet.Y);
+                yLabel.Clicked = false;
+            }
+            return false;
         }
 
         void CheckPoints(Vector2 mousePos, bool mouseDown, bool midDown)
