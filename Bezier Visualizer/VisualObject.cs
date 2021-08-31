@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -16,6 +17,7 @@ namespace Bezier_Visualizer
         public SpriteEffects effect;
         public Vector2 Origin;
         protected bool moved;
+
         protected bool bigger;
         protected bool rotated;
         protected Vector2 spotSet;
@@ -26,7 +28,6 @@ namespace Bezier_Visualizer
         protected Random random;
         public Color originalColor;
         public float oldRotation;
-        int fadeSpeed;
 
         public VisualObject(Vector2 location, Color color, Vector2 origin, float Rotation, SpriteEffects Effect, float scale, float depth)
         {
@@ -49,6 +50,32 @@ namespace Bezier_Visualizer
             degreeSet = float.NaN;
             spotSet = new Vector2(float.NaN, float.NaN);
         }
+
+        #region clone
+
+        public VisualObject Clone()
+        {
+            var copy = new VisualObject(Location, Color, Origin, rotation, effect, Scale, Depth);
+            CloneLogic(copy);
+            return copy;
+        }
+        protected void CloneLogic<T>(T copy) where T:VisualObject
+        {
+            copy.bigger = bigger;
+            copy.rotated = rotated;
+            copy.spotSet = spotSet;
+            copy.sizeSet = sizeSet;
+            copy.degreeSet = degreeSet;
+            copy.offset = offset;
+            copy.oldScale = oldScale;
+            copy.originalColor = originalColor;
+            copy.oldRotation = oldRotation;
+        }
+
+
+        #endregion
+
+        #region visualFunctions
         public void Vibrate(int distance, float sped, bool rando = true)
         {
             if (float.IsNaN(spotSet.X))
@@ -126,7 +153,7 @@ namespace Bezier_Visualizer
             }
         }
         public void Rotate(float target, float sped, bool rando = true)
-        {            
+        {
             if (float.IsNaN(degreeSet))
             {
                 if (rando)
@@ -212,7 +239,7 @@ namespace Bezier_Visualizer
                 tint = Color.FromNonPremultiplied(Color.R - Color.A, Color.G - Color.A, Color.A, Color.A);
             }
             if (Color.A <= 0)
-            {                
+            {
                 Color = tint;
                 Color = Color.FromNonPremultiplied(tint.R, tint.G, tint.B, 0);
                 return true;
@@ -234,5 +261,8 @@ namespace Bezier_Visualizer
             }
             return false;
         }
+
+
+        #endregion
     }
 }

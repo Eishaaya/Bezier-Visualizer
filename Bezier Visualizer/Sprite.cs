@@ -15,7 +15,7 @@ namespace Bezier_Visualizer
         {
             get
             {
-                return new Rectangle((int)Location.X, (int)Location.Y, Image.Width, Image.Height);
+                return new Rectangle((int)(Location.X + Origin.X), (int)(Location.Y + Origin.Y), (int)(Image.Width * Scale), (int)(Image.Height * Scale));
             }
         }
 
@@ -23,7 +23,25 @@ namespace Bezier_Visualizer
         : base(location, color, origin, rotation, effects, scale, depth)
         {
             Image = image;
-        }                
+        }
+
+        #region clone
+
+        public new Sprite Clone()
+        {
+            var copy = new Sprite(Image, Location, Color, rotation, effect, Origin, Scale, Depth);
+            CloneLogic(copy);
+
+            return copy;
+        }
+        protected new void CloneLogic<T>(T copy) where T : Sprite
+        {
+            base.CloneLogic(copy);
+            copy.Image = Image;
+        }
+
+        #endregion
+
         public virtual void Draw(SpriteBatch batch)
         {
             batch.Draw(Image, Location + offset, null, Color, rotation, Origin, Scale, effect, Depth);

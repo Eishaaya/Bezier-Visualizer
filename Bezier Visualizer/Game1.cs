@@ -38,6 +38,8 @@ namespace Bezier_Visualizer
         ButtonLabel arrangementLabel;
         bool anyKeyPressed;
 
+        List<Sprite> drawnPoints;
+
         float newNumber;
 
         Dictionary<ButtonLabel, Func<bool>> mapping;
@@ -63,6 +65,7 @@ namespace Bezier_Visualizer
             ks = new KeyboardState();
             points = new List<Button>();
             gridLines = new List<ScalableSprite>();
+            drawnPoints = new List<Sprite>();
             draggedPoint = null;
             prevDown = false;
             anyKeyPressed = false;
@@ -144,14 +147,13 @@ namespace Bezier_Visualizer
             //sumFunction(5, 5);
         }
 
-        private void Add(int x, int y) { x += y; }
-
-        private int Subtract(int x, int y) { return x - y; }
         protected override void UnloadContent()
         {
         }
         protected override void Update(GameTime gameTime)
         {
+            #region updateSetup
+
             base.Update(gameTime);
             ms = Mouse.GetState();
             ks = Keyboard.GetState();           
@@ -160,17 +162,29 @@ namespace Bezier_Visualizer
             var mouseDown = ms.LeftButton == ButtonState.Pressed;
             var midDown = ms.MiddleButton == ButtonState.Pressed;
 
+            #endregion
+
+            #region drawing
             if (bezier != null)
             {
+                var oldLocation = drawnLine.Location;
                 bezier.Update(gameTime);
                 drawnLine.Location = bezier.Location + offSet;
                 drawnLine.rotation = (bezier.Rotation) * -1 + MathHelper.Pi;
+                if (drawnLine.Location != oldLocation)
+                {
+                    drawnPoints.Add(drawnLine.Clone());
+                    drawnPoints.ColorPoints(Color.DarkOrange);
+                }
             }
             else
             {
                 drawnLine.Location = new Vector2(-1000);
+                drawnPoints = new List<Sprite>();
             }
+            #endregion
 
+            #region selectionSettings
 
             if (selectedPoint != null)
             {
@@ -216,6 +230,10 @@ namespace Bezier_Visualizer
                 arrangementLabel.Label.Clear();
             }
 
+            #endregion
+
+            #region topButtons
+
             if (pointMaker.check(mousePos, mouseDown) && !prevDown && bezier == null)
             {
                 if (draggedPoint == null)
@@ -257,19 +275,27 @@ namespace Bezier_Visualizer
                                           new Bezier(5, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
                 }
             }
-            else if (draggedPoint != null)
+            #endregion
+
+            #region pointManagment
+
+            else
             {
-                DragLogic(mousePos, mouseDown);
-            }
-            else if (bezier == null)
-            {
-                CheckPoints(mousePos, mouseDown, midDown);
+                if (draggedPoint != null)
+                {
+                    DragLogic(mousePos, mouseDown);
+                }
+                if (bezier == null)
+                {
+                    CheckPoints(mousePos, mouseDown, midDown);
+                }
             }
 
             prevDown = mouseDown;
         }
+        #endregion
 
-        #region PointPlacing
+        #region PointPlacingFunctions
 
         void CancelSelection()
         {
@@ -307,6 +333,10 @@ namespace Bezier_Visualizer
                 return;
             }
             draggedPoint.Color = Color.White;
+            if (ks.IsKeyDown(Keys.LeftControl) || ks.IsKeyDown(Keys.RightControl))
+            {
+                draggedPoint.Location = new Vector2((float)Math.Round(draggedPoint.Location.X / gridWidth, 1) * gridWidth, (float)Math.Round(draggedPoint.Location.Y / gridWidth, 1) * gridWidth);
+            }
             if (grabbedIndex < 0)
             {
                 points.Add(draggedPoint);
@@ -315,7 +345,10 @@ namespace Bezier_Visualizer
             {
                 points[grabbedIndex] = draggedPoint;
             }
-            draggedPoint = null;
+            if (!ks.IsKeyDown(Keys.LeftShift) && !ks.IsKeyDown(Keys.RightShift))
+            {
+                draggedPoint = null;
+            }
             ColorPoints();
         }
 
@@ -325,7 +358,6 @@ namespace Bezier_Visualizer
             {
                 var degree = (float)Math.Pow(i / (points.Count != 1 ? (float)points.Count - 1 : 1), 1.75);
                 points[i].NormalColor = Color.Lerp(Color.CornflowerBlue, Color.Red, degree);
-                points[i].Color = points[i].originalColor;
             }
         }
 
@@ -347,6 +379,7 @@ namespace Bezier_Visualizer
             }
             else if (mouseDown && !prevDown)
             {
+                prevDown = true;
                 PlacePoint();
             }
         }
@@ -470,6 +503,7 @@ namespace Bezier_Visualizer
         }
         #endregion
 
+        #region drawing
         protected override void Draw(GameTime gameTime)
         {
             spriteBatch.Begin();
@@ -487,7 +521,10 @@ namespace Bezier_Visualizer
             }
             else
             {
-                drawnLine.Draw(spriteBatch);
+                foreach (var point in drawnPoints)
+                {
+                    point.Draw(spriteBatch);
+                }
             }
 
             foreach (Sprite point in points)
@@ -513,5 +550,6 @@ namespace Bezier_Visualizer
             spriteBatch.End();
             base.Draw(gameTime);
         }
+        #endregion
     }
 }

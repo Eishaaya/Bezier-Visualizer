@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -20,12 +21,12 @@ namespace Bezier_Visualizer
             }
         }
 
-        public static float Slope (Vector2 point1, Vector2 point2)
+        public static float Slope(Vector2 point1, Vector2 point2)
         {
             return (point2.Y - point1.Y) / (point2.X - point1.X);
         }
 
-        public static float PointAt (this Vector2 start, Vector2 target)
+        public static float PointAt(this Vector2 start, Vector2 target)
         {
             var difference = target - start;
             return (float)Math.Atan2(difference.X, difference.Y);
@@ -33,7 +34,7 @@ namespace Bezier_Visualizer
 
         public static int Factorial(this int number)
         {
-            int result = 1;            
+            int result = 1;
             while (number > 1)
             {
                 result *= number;
@@ -42,6 +43,14 @@ namespace Bezier_Visualizer
             return result;
         }
 
+        public static void ColorPoints(this List<Sprite> points, Color newColor)
+        {
+            for (int i = 0; i < points.Count; i++)
+            {
+                var degree = (float)Math.Pow(i / (points.Count != 1 ? (float)points.Count - 1 : 1), 1.75);
+                points[i].Color = Color.Lerp(points[i].originalColor, newColor, degree);
+            }
+        }
         public static float AddTill(this float number, float endCondition, float amount)
         {
             return number + (float)(int)((endCondition - number) / amount + .99f) * amount;
@@ -81,7 +90,7 @@ namespace Bezier_Visualizer
 
         public static void Idle(this Enemy enemy)
         {
-            
+
         }
 
         public static void Move(this Enemy enemy, Vector2 targetLocation, Enemy.MoveType type, params int[] moveNumber)
