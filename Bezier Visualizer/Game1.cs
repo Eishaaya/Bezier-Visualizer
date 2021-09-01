@@ -9,6 +9,7 @@ namespace Bezier_Visualizer
 {
     public class Game1 : Game
     {
+        int placements = 0;
         public static Vector2 bounds = new Vector2(940, 1080);
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
@@ -345,11 +346,16 @@ namespace Bezier_Visualizer
             {
                 points[grabbedIndex] = draggedPoint;
             }
-            if (!ks.IsKeyDown(Keys.LeftShift) && !ks.IsKeyDown(Keys.RightShift))
+            if (ks.IsKeyDown(Keys.LeftShift) || ks.IsKeyDown(Keys.RightShift))
+            {
+                draggedPoint = draggedPoint.Clone();
+            }
+            else
             {
                 draggedPoint = null;
             }
             ColorPoints();
+            placements++;
         }
 
         void ColorPoints()

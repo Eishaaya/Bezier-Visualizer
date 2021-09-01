@@ -32,6 +32,27 @@ namespace Bezier_Visualizer
             Hold = false;
             PrevDown = false;
         }
+
+        #region clone
+
+        public new Button Clone()
+        {
+            var copy = new Button(Image, Location, Color, rotation, effect, Origin, Scale, Depth, HoverColor, ClickedColor);
+            CloneLogic(copy);
+
+            return copy;
+        }
+        protected new void CloneLogic<T>(T copy) where T : Button
+        {
+            base.CloneLogic(copy);
+            copy.NormalColor = NormalColor;
+            copy.Hold = Hold;
+            copy.Held = Held;
+            copy.PrevDown = PrevDown;
+        }
+
+        #endregion
+
         public virtual bool check(Vector2 cursor, bool isclicked)
         {
             if (Hitbox.Contains(cursor))
