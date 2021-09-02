@@ -49,7 +49,7 @@ namespace Bezier_Visualizer
             {
                 var degree = (float)Math.Pow(i / (points.Count != 1 ? (float)points.Count - 1 : 1), 1.75);
                 points[i].Color = Color.Lerp(points[i].originalColor, newColor, degree);
-            }
+            }            
         }
         public static float AddTill(this float number, float endCondition, float amount)
         {

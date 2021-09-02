@@ -37,6 +37,12 @@ namespace Bezier_Visualizer
         ButtonLabel xLabel;
         ButtonLabel yLabel;
         ButtonLabel arrangementLabel;
+        ButtonLabel timeLabel;
+
+        double time = 3;
+
+        Label indexLabel;
+
         bool anyKeyPressed;
 
         List<Sprite> drawnPoints;
@@ -98,7 +104,7 @@ namespace Bezier_Visualizer
                 }
             }
 
-            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);
+            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);            
             drawnLine = new Sprite(Content.Load<Texture2D>("Line"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(6), 1, 1);
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
@@ -108,22 +114,29 @@ namespace Bezier_Visualizer
 
             arrangementLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Short Highlight"), new Vector2(gridWidth + 259, run.Image.Height + 300),
                                                           Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
-                                               new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 269, run.Image.Height + 324 - 18), "", TimeSpan.Zero));
+                                               new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 269, run.Image.Height + 324 - 18), ""));
 
             xLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Highlight"), new Vector2(gridWidth + 50, run.Image.Height + 50),
                                                 Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
-                                     new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 74 - 18), "", TimeSpan.Zero));
+                                     new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 74 - 18), ""));
 
             yLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Highlight"), new Vector2(gridWidth + 50, run.Image.Height + 150),
                                                 Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
-                                    new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 174 - 18), "", TimeSpan.Zero));
+                                    new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 50, run.Image.Height + 174 - 18), ""));
+
+            timeLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Short Highlight"), new Vector2(gridWidth + 259, run.Image.Height + 600),
+                                                          Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
+                                               new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 269, run.Image.Height + 624 - 18), "3"));
+
+            indexLabel = new Label(Content.Load<SpriteFont>("RightFont"), Color.White, new Vector2(gridWidth + 272, settingsBox.Location.Y + 474 - 18), "NaN");
 
 
             mapping = new Dictionary<ButtonLabel, Func<bool>>()
             {
                 [arrangementLabel] = SwapArrangment,
                 [xLabel] = SetX,
-                [yLabel] = SetY
+                [yLabel] = SetY,
+                [timeLabel] = SetTime
             };
 
             keyStrings = new Dictionary<Keys, string>()
@@ -187,42 +200,48 @@ namespace Bezier_Visualizer
 
             #region selectionSettings
 
+            if (timeLabel.Clicked || timeLabel.Check(mousePos, mouseDown))
+            {
+                InputLogic(timeLabel, xLabel, yLabel, arrangementLabel);
+            }
+
             if (selectedPoint != null)
             {
+
                 if (arrangementLabel.Clicked || arrangementLabel.Check(mousePos, mouseDown))
                 {
-                    InputLogic(arrangementLabel, xLabel, yLabel);
+                    InputLogic(arrangementLabel, xLabel, yLabel, timeLabel);
                 }
                 else if (xLabel.Clicked || xLabel.Check(mousePos, mouseDown))
                 {
-                    InputLogic(xLabel, arrangementLabel, yLabel);
+                    InputLogic(xLabel, arrangementLabel, yLabel, timeLabel);
                 }
                 else if (yLabel.Clicked || yLabel.Check(mousePos, mouseDown))
                 {
-                    InputLogic(yLabel, arrangementLabel, xLabel);
+                    InputLogic(yLabel, arrangementLabel, xLabel, timeLabel);
                 }
                 else if (mouseDown && mousePos.X < gridWidth)
                 {
                     CancelSelection();
                 }
+
                 else
                 {
                     var coords = selectedPoint.Location.ConvertPos(new Vector2(gridWidth), offSet);
                     if (!arrangementLabel.Clicked)
                     {
-                        arrangementLabel.Label.setText(grabbedIndex, 0);
+                        arrangementLabel.Label.SetText(grabbedIndex, 0);
                     }
                     if (!xLabel.Clicked)
                     {
-                        xLabel.Label.setText(coords.X, 5);
+                        xLabel.Label.SetText(coords.X, 5);
                     }
                     if (!yLabel.Clicked)
                     {
-                        yLabel.Label.setText(coords.Y, 5);
+                        yLabel.Label.SetText(coords.Y, 5);
                     }
                 }
             }
-
 
             else
             {
@@ -254,7 +273,12 @@ namespace Bezier_Visualizer
             }
             else if (clear.check(mousePos, mouseDown))
             {
+                if (bezier != null)
+                {
+                    bezier = null;
+                }
                 points.Clear();
+                indexLabel.SetText("NaN");
             }
             else if (run.check(mousePos, mouseDown))
             {
@@ -272,8 +296,8 @@ namespace Bezier_Visualizer
                         pointsX[i] = coords.X;
                         pointsY[i] = coords.Y;
                     }
-                    bezier = new Bezier2D(new Bezier(5, pointsX, new double[] { 0, 1 }),
-                                          new Bezier(5, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
+                    bezier = new Bezier2D(new Bezier(time, pointsX, new double[] { 0, 1 }),
+                                          new Bezier(time, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
                 }
             }
             #endregion
@@ -365,6 +389,14 @@ namespace Bezier_Visualizer
                 var degree = (float)Math.Pow(i / (points.Count != 1 ? (float)points.Count - 1 : 1), 1.75);
                 points[i].NormalColor = Color.Lerp(Color.CornflowerBlue, Color.Red, degree);
             }
+            if (points.Count > 0)
+            {
+                indexLabel.SetText(points.Count - 1);
+            }
+            else
+            {
+                indexLabel.SetText("NaN");
+            }
         }
 
         void SetDraggedPoint(Vector2 mousePos, int index = -1)
@@ -392,9 +424,6 @@ namespace Bezier_Visualizer
 
         void InputLogic (ButtonLabel label, params ButtonLabel[] others)
         {
-            //Loop through pressed keys
-            //Create dictionary that maps from (key) -> (action)
-
             if (ks.GetPressedKeys().Length > 0)
             {
                 if (!anyKeyPressed)
@@ -469,7 +498,7 @@ namespace Bezier_Visualizer
             if (newNumber >= 0 && newNumber <= 1)
             {
                 selectedPoint.Location = new Vector2(newNumber * gridWidth, selectedPoint.Location.Y);
-                xLabel.Clicked = false;
+                xLabel.Clicked = false;                
             }
             return false;
         }
@@ -479,6 +508,16 @@ namespace Bezier_Visualizer
             {
                 selectedPoint.Location = new Vector2(selectedPoint.Location.X, newNumber * gridWidth + offSet.Y);
                 yLabel.Clicked = false;
+            }
+            return false;
+        }
+
+        bool SetTime()
+        {
+            if (newNumber >= 1 && newNumber <= 999)
+            {
+                time = newNumber;
+                timeLabel.Clicked = true;                
             }
             return false;
         }
@@ -517,13 +556,13 @@ namespace Bezier_Visualizer
             {
                 GraphicsDevice.Clear(Color.SlateGray);
                 graphBackGround.Draw(spriteBatch);
+                indexLabel.Print(spriteBatch);
+                timeLabel.Draw(spriteBatch);
 
                 foreach (ScalableSprite line in gridLines)
                 {
                     line.Draw(spriteBatch);
                 }
-
-
             }
             else
             {
@@ -543,7 +582,6 @@ namespace Bezier_Visualizer
                 draggedPoint.Draw(spriteBatch);
             }
 
-            settingsBox.Draw(spriteBatch);
             pointMaker.Draw(spriteBatch);
             delete.Draw(spriteBatch);
             clear.Draw(spriteBatch);
@@ -552,6 +590,8 @@ namespace Bezier_Visualizer
             xLabel.Draw(spriteBatch);
             yLabel.Draw(spriteBatch);
             arrangementLabel.Draw(spriteBatch);
+
+            settingsBox.Draw(spriteBatch);
 
             spriteBatch.End();
             base.Draw(gameTime);

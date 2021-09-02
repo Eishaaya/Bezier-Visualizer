@@ -19,6 +19,9 @@ namespace Bezier_Visualizer
             }
         }
 
+        public Sprite(Texture2D image, Vector2 location)
+            : this(image, location, Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1) { }
+
         public Sprite(Texture2D image, Vector2 location, Color color, float rotation, SpriteEffects effects, Vector2 origin, float scale, float depth)
         : base(location, color, origin, rotation, effects, scale, depth)
         {

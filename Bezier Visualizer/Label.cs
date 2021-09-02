@@ -16,6 +16,9 @@ namespace Bezier_Visualizer
         TimeSpan tick;
         bool fade = false;
 
+
+        public Label(SpriteFont font, Color color, Vector2 location, string text)
+            : this(font, color, location, text, TimeSpan.Zero) { }
         public Label(SpriteFont font, Color color, Vector2 location, string text, TimeSpan lifetime)
             : this(font, color, location, text, lifetime, new Vector2(0, 0), 0, SpriteEffects.None, 1, 1) { }
         public Label(SpriteFont font, Color color, Vector2 location, string text, TimeSpan lifetime, float Scale)
@@ -36,11 +39,11 @@ namespace Bezier_Visualizer
             }
         }
 
-        public void setText (string text)
+        public void SetText (string text)
         {
             this.Text = text;
         }
-        public void setText (double number, int maxDigits)
+        public void SetText (double number, int maxDigits = 0)
         {
             Text = Math.Round(number, maxDigits).ToString();
         }
