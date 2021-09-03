@@ -373,6 +373,7 @@ namespace Bezier_Visualizer
             if (ks.IsKeyDown(Keys.LeftShift) || ks.IsKeyDown(Keys.RightShift))
             {
                 draggedPoint = draggedPoint.Clone();
+                grabbedIndex = -1;
             }
             else
             {
