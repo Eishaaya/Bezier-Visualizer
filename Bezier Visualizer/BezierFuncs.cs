@@ -6,12 +6,12 @@ using System.Text;
 
 namespace Bezier_Visualizer
 {
-    struct DualInt
+    struct DualUlong
     {        
-        public int X { get; set; }
-        public int Y { get; set; }
+        public ulong X { get; set; }
+        public ulong Y { get; set; }
 
-        public DualInt(int x, int y)
+        public DualUlong(ulong x, ulong y)
         {
             X = x;
             Y = y;
@@ -143,7 +143,7 @@ namespace Bezier_Visualizer
     class BezierFuncs
     {
         static BezierFuncs Instance;
-        Dictionary<DualInt, int> cents;
+        Dictionary<DualUlong, ulong> cents;
         public static BezierFuncs Get()
         {
             if (Instance == null)
@@ -154,25 +154,25 @@ namespace Bezier_Visualizer
         }
         BezierFuncs()
         {
-            cents = new Dictionary<DualInt, int>();
+            cents = new Dictionary<DualUlong, ulong>();
         }
 
         public double BezierCalc(double[] points, double time)
         {
             double result = 0;
-            for (int i = 0; i < points.Length; i++)
+            for (uint i = 0; i < points.Length; i++)
             {
-                result += PascalIndex(i, points.Length - 1) * Math.Pow(1 - time, points.Length - 1 - i) * Math.Pow(time, i) * points[i];
+                result += PascalIndex(i, (ulong)points.Length - 1) * Math.Pow(1 - time, points.Length - 1 - i) * Math.Pow(time, i) * points[i];
             }
             return result;
         }
 
-        public int PascalIndex(int column, int row)
+        public ulong PascalIndex(ulong column, ulong row)
         {
-            var key = new DualInt(column, row);
+            var key = new DualUlong(column, row);
             if (column > row)
             {
-                return -1;
+                return 0;
             }
             if (cents.ContainsKey(key))
             {

@@ -32,9 +32,9 @@ namespace Bezier_Visualizer
             return (float)Math.Atan2(difference.X, difference.Y);
         }
 
-        public static int Factorial(this int number)
+        public static ulong Factorial(this ulong number)
         {
-            int result = 1;
+            ulong result = 1;
             while (number > 1)
             {
                 result *= number;

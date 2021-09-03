@@ -296,7 +296,7 @@ namespace Bezier_Visualizer
                         pointsX[i] = coords.X;
                         pointsY[i] = coords.Y;
                     }
-                    bezier = new Bezier2D(new Bezier(time, pointsX, new double[] { 0, 1 }),
+                    bezier = new Bezier2D(new Bezier(time, new double[] { 0, 1 }, pointsX),
                                           new Bezier(time, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
                 }
             }
