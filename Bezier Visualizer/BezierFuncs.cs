@@ -17,6 +17,17 @@ namespace Bezier_Visualizer
             Y = y;
         }
     }
+    struct DualDouble
+    {
+        public double X { get; set; }
+        public double Y { get; set; }
+
+        public DualDouble(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+    }
 
     class Bezier2D
     {
@@ -143,7 +154,7 @@ namespace Bezier_Visualizer
     class BezierFuncs
     {
         static BezierFuncs Instance;
-        Dictionary<DualUlong, ulong> cents;
+        Dictionary<DualDouble, double> cents;
         public static BezierFuncs Get()
         {
             if (Instance == null)
@@ -154,7 +165,7 @@ namespace Bezier_Visualizer
         }
         BezierFuncs()
         {
-            cents = new Dictionary<DualUlong, ulong>();
+            cents = new Dictionary<DualDouble, double>();
         }
 
         public double BezierCalc(double[] points, double time)
@@ -167,9 +178,29 @@ namespace Bezier_Visualizer
             return result;
         }
 
-        public ulong PascalIndex(ulong column, ulong row)
+        //public ulong PascalIndex(ulong column, ulong row)
+        //{
+        //    var key = new DualUlong(column, row);
+        //    if (column > row)
+        //    {
+        //        return 0;
+        //    }
+        //    if (cents.ContainsKey(key))
+        //    {
+        //        return cents[key];
+        //    }
+        //    var rowFact = row.Factorial();
+        //    var colFact = column.Factorial();
+        //    var bothFact = (row - column).Factorial();
+
+        //    var answer = rowFact / (colFact * bothFact);
+        //    cents.Add(key, answer);
+        //    return answer;
+        //}
+
+        public double PascalIndex(double column, double row)
         {
-            var key = new DualUlong(column, row);
+            var key = new DualDouble(column, row);
             if (column > row)
             {
                 return 0;

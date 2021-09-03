@@ -43,6 +43,17 @@ namespace Bezier_Visualizer
             return result;
         }
 
+        public static double Factorial(this double number)
+        {
+            double result = 1;
+            while (number > 1)
+            {
+                result *= number;
+                number--;
+            }
+            return result;
+        }
+
         public static void ColorPoints(this List<Sprite> points, Color newColor)
         {
             for (int i = 0; i < points.Count; i++)
