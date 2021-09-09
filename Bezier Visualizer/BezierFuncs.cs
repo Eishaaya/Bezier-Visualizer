@@ -60,8 +60,8 @@ namespace Bezier_Visualizer
             switch (command)
             {
                 case PointType.Linear:
-                    return new Bezier2D(new Bezier(timeMulti, new double[] { 0, 1 }, new double[] { start.X, end.X }, start.X),
-                                        new Bezier(timeMulti, new double[] { 0, 1 }, new double[] { start.Y, end.Y }, start.Y),
+                    return new Bezier2D(new Bezier(timeMulti, new double[] { 0, 1 }, new double[] { start.X, end.X }),
+                                        new Bezier(timeMulti, new double[] { 0, 1 }, new double[] { start.Y, end.Y }),
                                         new Vector2(1, 1));
                 default:
                     return null;
@@ -73,6 +73,7 @@ namespace Bezier_Visualizer
             this.xCurve = xCurve;
             this.yCurve = yCurve;
             this.multiplyer = multiplyer;
+            UpdateProperties();
         }
 
         public void Update(GameTime gameTime)
@@ -94,10 +95,11 @@ namespace Bezier_Visualizer
     {
         HalfBezier timeBezier;
 
-        public Bezier(double timeMulti, double[] timepoints, double[] points, double location = 0)
-            : base(1, points, location)
+        public Bezier(double timeMulti, double[] timepoints, double[] points)
+            : base(1, points)
         {
             timeBezier = new HalfBezier(timeMulti, timepoints);
+            Update(0);
         }
 
         public override bool Update(GameTime gameTime)
@@ -113,9 +115,8 @@ namespace Bezier_Visualizer
         protected double[] points;
         public double Location { get; set; }
 
-        public HalfBezier(double timeMulti, double[] points, double location = 0)
+        public HalfBezier(double timeMulti, double[] points)
         {
-            Location = location;
             this.time = 0;
             timeMultiplier = timeMulti;
             this.points = points;
@@ -123,11 +124,16 @@ namespace Bezier_Visualizer
 
         public virtual bool Update(GameTime gameTime)
         {
-            if (time >= 1 || time < 0)
+            time += (gameTime.ElapsedGameTime.TotalMilliseconds) / timeMultiplier / 1000;
+            if (time > 1)
             {
+                time = 1;
+            }
+            if (time < 0)
+            {
+                time = 0;
                 return false;
             }
-            time += (gameTime.ElapsedGameTime.TotalMilliseconds) / timeMultiplier / 1000;
             Location = BezierFuncs.Get().BezierCalc(points, time);
             return true;
         }
@@ -135,12 +141,12 @@ namespace Bezier_Visualizer
         public bool Update(double thyme)
         {
             time = thyme;
-            if (thyme >= 1)
+            if (thyme > 1)
             {
                 time = 1;
                 return false;
             }
-            else if (thyme <= 0)
+            else if (thyme < 0)
             {
                 time = 0;
                 return false;

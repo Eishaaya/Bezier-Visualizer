@@ -9,6 +9,7 @@ namespace Bezier_Visualizer
 {
     public class Game1 : Game
     {
+        bool shouldRun;
         int placements = 0;
         public static Vector2 bounds = new Vector2(940, 1080);
         GraphicsDeviceManager graphics;
@@ -27,6 +28,7 @@ namespace Bezier_Visualizer
         ScalableSprite midBeam;
         List<ScalableSprite> gridLines;
         Sprite drawnLine;
+        ScalableSprite drawnSegment;
         Vector2 offSet;
         float gridWidth;
         Sprite settingsBox;
@@ -76,6 +78,7 @@ namespace Bezier_Visualizer
             draggedPoint = null;
             prevDown = false;
             anyKeyPressed = false;
+            shouldRun = false;
             grabbedIndex = -1;
 
             gridWidth = bounds.Y / 2;
@@ -105,7 +108,8 @@ namespace Bezier_Visualizer
             }
 
             settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);            
-            drawnLine = new Sprite(Content.Load<Texture2D>("Line"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(6), 1, 1);
+            drawnLine = new Sprite(Content.Load<Texture2D>("Line"), new Vector2(-1), Color.Gold, 0, SpriteEffects.None, new Vector2(7.5f), 1, 1);
+            drawnSegment = new ScalableSprite(Content.Load<Texture2D>("LineSegment"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(0, 7.5f), new Vector2(1));
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
             delete = new Button(Content.Load<Texture2D>("DeleteButton"), new Vector2(bounds.X - 200, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
@@ -181,20 +185,34 @@ namespace Bezier_Visualizer
             #region drawing
             if (bezier != null)
             {
-                var oldLocation = drawnLine.Location;
-                bezier.Update(gameTime);
+                var oldLocation = drawnLine.Location;                
                 drawnLine.Location = bezier.Location + offSet;
-                drawnLine.rotation = (bezier.Rotation) * -1 + MathHelper.Pi;
+
                 if (drawnLine.Location != oldLocation)
                 {
+                    if (drawnPoints.Count > 0)
+                    {
+                        drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
+                        drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
+                        drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
+                        drawnPoints.Add(drawnSegment.Clone());
+                    }
+
                     drawnPoints.Add(drawnLine.Clone());
                     drawnPoints.ColorPoints(Color.DarkOrange);
                 }
+                bezier.Update(gameTime);
             }
             else
             {
                 drawnLine.Location = new Vector2(-1000);
                 drawnPoints = new List<Sprite>();
+            }
+
+            if (shouldRun)
+            {
+                RunBlock(mousePos, mouseDown, midDown);
+                shouldRun = false;
             }
             #endregion
 
@@ -282,23 +300,8 @@ namespace Bezier_Visualizer
             }
             else if (run.check(mousePos, mouseDown))
             {
-                CancelSelection();
-                DeletePoint();
-                CheckPoints(mousePos, mouseDown, midDown);
-                if (points.Count > 1)
-                {
-                    double[] pointsX = new double[points.Count];
-                    double[] pointsY = new double[points.Count];
-
-                    for (int i = 0; i < points.Count; i++)
-                    {
-                        var coords = points[i].Location.ConvertPos(new Vector2(gridWidth), offSet);
-                        pointsX[i] = coords.X;
-                        pointsY[i] = coords.Y;
-                    }
-                    bezier = new Bezier2D(new Bezier(time, new double[] { 0, 1 }, pointsX),
-                                          new Bezier(time, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
-                }
+                shouldRun = true;
+                bezier = null;
             }
             #endregion
 
@@ -402,13 +405,35 @@ namespace Bezier_Visualizer
 
         void SetDraggedPoint(Vector2 mousePos, int index = -1)
         {
-            draggedPoint = new Button(draggedTexture, mousePos, Color.White, 0, SpriteEffects.None, new Vector2(10, 10), 1, 1, Color.DarkGray, Color.Gray);
+            draggedPoint = new Button(draggedTexture, mousePos, Color.White, 0, SpriteEffects.None, new Vector2(12, 12), 1, 1, Color.DarkGray, Color.Gray);
             grabbedIndex = index;
         }
 
         #endregion
 
         #region seperatedBlocks
+
+        void RunBlock(Vector2 mousePos, bool mouseDown, bool midDown)
+        {
+            CancelSelection();
+            DeletePoint();
+            CheckPoints(mousePos, mouseDown, midDown);
+            if (points.Count > 1)
+            {
+                double[] pointsX = new double[points.Count];
+                double[] pointsY = new double[points.Count];
+
+                for (int i = 0; i < points.Count; i++)
+                {
+                    var coords = points[i].Location.ConvertPos(new Vector2(gridWidth), offSet);
+                    pointsX[i] = coords.X;
+                    pointsY[i] = coords.Y;
+                }
+                bezier = new Bezier2D(new Bezier(time, new double[] { 0, 1 }, pointsX),
+                                      new Bezier(time, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
+            }
+        }
+
         void DragLogic(Vector2 mousePos, bool mouseDown)
         {
             draggedPoint.Location = mousePos;
@@ -515,7 +540,7 @@ namespace Bezier_Visualizer
 
         bool SetTime()
         {
-            if (newNumber >= 1 && newNumber <= 999)
+            if (newNumber >= .5f && newNumber <= 999)
             {
                 time = newNumber;
                 timeLabel.Clicked = true;                
