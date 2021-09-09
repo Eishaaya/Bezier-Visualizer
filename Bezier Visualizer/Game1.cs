@@ -208,7 +208,7 @@ namespace Bezier_Visualizer
                 drawnLine.Location = new Vector2(-1000);
                 drawnPoints = new List<Sprite>();
             }
-
+            
             if (shouldRun)
             {
                 RunBlock(mousePos, mouseDown, midDown);
