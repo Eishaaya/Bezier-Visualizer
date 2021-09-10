@@ -20,6 +20,7 @@ namespace Bezier_Visualizer
         Button clear;
         Button delete;
         Button run;
+        Button linearButton;
         MouseState ms;
         KeyboardState ks;
         bool prevDown;
@@ -110,11 +111,13 @@ namespace Bezier_Visualizer
             settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);            
             drawnLine = new Sprite(Content.Load<Texture2D>("Line"), new Vector2(-1), Color.Gold, 0, SpriteEffects.None, new Vector2(7.5f), 1, 1);
             drawnSegment = new ScalableSprite(Content.Load<Texture2D>("LineSegment"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(0, 7.5f), new Vector2(1));
-            run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
-            pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
-            delete = new Button(Content.Load<Texture2D>("DeleteButton"), new Vector2(bounds.X - 200, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
-            clear = new Button(Content.Load<Texture2D>("ClearButton"), new Vector2(bounds.X - 100, 0), Color.White, 0, SpriteEffects.None, new Vector2(0, 0), 1, 1, Color.Gray, Color.DarkGray);
-
+            
+            
+            run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0));
+            pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0));
+            delete = new Button(Content.Load<Texture2D>("DeleteButton"), new Vector2(bounds.X - 200, 0));
+            clear = new Button(Content.Load<Texture2D>("ClearButton"), new Vector2(bounds.X - 100, 0));
+            linearButton = new Button(Content.Load<Texture2D>("LinearButton"), pointMaker.Location);
 
             arrangementLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Short Highlight"), new Vector2(gridWidth + 259, run.Image.Height + 300),
                                                           Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
@@ -593,6 +596,7 @@ namespace Bezier_Visualizer
                 graphBackGround.Draw(spriteBatch);
                 indexLabel.Print(spriteBatch);
                 timeLabel.Draw(spriteBatch);
+                pointMaker.Draw(spriteBatch);
 
                 foreach (ScalableSprite line in gridLines)
                 {
@@ -603,8 +607,10 @@ namespace Bezier_Visualizer
             {
                 foreach (var point in drawnPoints)
                 {
+                    linearButton.Draw(spriteBatch);
                     point.Draw(spriteBatch);
                 }
+
             }
 
             foreach (Sprite point in points)
@@ -617,7 +623,6 @@ namespace Bezier_Visualizer
                 draggedPoint.Draw(spriteBatch);
             }
 
-            pointMaker.Draw(spriteBatch);
             delete.Draw(spriteBatch);
             clear.Draw(spriteBatch);
             run.Draw(spriteBatch);
