@@ -220,7 +220,10 @@ namespace Bezier_Visualizer
 
             if (timeLabel.Clicked || timeLabel.Check(mousePos, mouseDown))
             {
-                InputLogic(timeLabel, xLabel, yLabel, arrangementLabel);
+                if (!InputLogic(timeLabel, xLabel, yLabel, arrangementLabel))
+                {
+                    timeLabel.Label.SetText(time, 3);
+                }
             }
 
             if (selectedPoint != null)
@@ -332,6 +335,7 @@ namespace Bezier_Visualizer
             xLabel.Clicked = false;
             yLabel.Clicked = false;
             arrangementLabel.Clicked = false;
+            timeLabel.Clicked = false;
         }
 
         void DeletePoint()
@@ -448,7 +452,7 @@ namespace Bezier_Visualizer
             }
         }
 
-        void InputLogic (ButtonLabel label, params ButtonLabel[] others)
+        bool InputLogic (ButtonLabel label, params ButtonLabel[] others)
         {
             if (ks.GetPressedKeys().Length > 0)
             {
@@ -472,7 +476,7 @@ namespace Bezier_Visualizer
                             if (!parseable || !mapping[label]())
                             {
                                 label.Clicked = false;
-                                return;
+                                return false;
                             }
                         }
                     }
@@ -480,6 +484,7 @@ namespace Bezier_Visualizer
                     {
                         label.Label.Add(keyStrings[input][0]);
                     }
+                    
                 }
             }
             else
@@ -490,6 +495,7 @@ namespace Bezier_Visualizer
             {
                 button.Clicked = false;
             }
+            return true;
         }
 
         bool SwapArrangment ()
@@ -524,7 +530,7 @@ namespace Bezier_Visualizer
             if (newNumber >= 0 && newNumber <= 1)
             {
                 selectedPoint.Location = new Vector2(newNumber * gridWidth, selectedPoint.Location.Y);
-                xLabel.Clicked = false;                
+                xLabel.Clicked = false;
             }
             return false;
         }
@@ -540,11 +546,14 @@ namespace Bezier_Visualizer
 
         bool SetTime()
         {
-            if (newNumber >= .5f && newNumber <= 999)
+            if (newNumber >= 0.001 && newNumber <= 999)
             {
                 time = newNumber;
-                timeLabel.Clicked = true;                
+                timeLabel.Label.SetText(time, 3);
+                timeLabel.Clicked = false;
+                return true;
             }
+            timeLabel.Label.SetText(time, 3);
             return false;
         }
 
