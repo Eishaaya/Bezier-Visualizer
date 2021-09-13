@@ -9,6 +9,13 @@ namespace Bezier_Visualizer
 {
     public class Game1 : Game
     {
+        enum DisplayType
+        {
+            TimeXPosition,
+            LinearPosition
+        }
+        DisplayType displayType = DisplayType.TimeXPosition;
+
         bool shouldRun;
         int placements = 0;
         public static Vector2 bounds = new Vector2(940, 1080);
@@ -20,11 +27,14 @@ namespace Bezier_Visualizer
         Button clear;
         Button delete;
         Button run;
-        Button linearButton;
+
+        Texture2D MakeButttxt;
+        Texture2D LinearButttxt;
+
         MouseState ms;
         KeyboardState ks;
         bool prevDown;
-        int grabbedIndex;        
+        int grabbedIndex;
         ScalableSprite graphBackGround;
         ScalableSprite midBeam;
         List<ScalableSprite> gridLines;
@@ -86,7 +96,6 @@ namespace Bezier_Visualizer
             offSet = new Vector2(0, bounds.Y / 4);
             draggedTexture = Content.Load<Texture2D>("Point");
 
-
             graphBackGround = new ScalableSprite(Content.Load<Texture2D>("Pixel"), Vector2.Zero, Color.LightGray, 0, SpriteEffects.None, Vector2.Zero, new Vector2(540, 1080), 1);
             midBeam = new ScalableSprite(Content.Load<Texture2D>("Pixel"), new Vector2(0, offSet.Y), Color.Black, 0, SpriteEffects.None, new Vector2(0, .5f), new Vector2(540, 10), 1);
             gridLines.Add(midBeam);
@@ -108,16 +117,18 @@ namespace Bezier_Visualizer
                 }
             }
 
-            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);            
+            settingsBox = new Sprite(Content.Load<Texture2D>("Box"), new Vector2(gridWidth, 47), Color.White, 0, SpriteEffects.None, Vector2.Zero, 1, 1);
             drawnLine = new Sprite(Content.Load<Texture2D>("Line"), new Vector2(-1), Color.Gold, 0, SpriteEffects.None, new Vector2(7.5f), 1, 1);
             drawnSegment = new ScalableSprite(Content.Load<Texture2D>("LineSegment"), Vector2.Zero, Color.Gold, 0, SpriteEffects.None, new Vector2(0, 7.5f), new Vector2(1));
-            
-            
+
+            MakeButttxt = Content.Load<Texture2D>("MakeButton");
+            LinearButttxt = Content.Load<Texture2D>("LinearButton");
+
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0));
-            pointMaker = new Button(Content.Load<Texture2D>("MakeButton"), new Vector2(bounds.X - 300, 0));
+            pointMaker = new Button(MakeButttxt, new Vector2(bounds.X - 300, 0));
             delete = new Button(Content.Load<Texture2D>("DeleteButton"), new Vector2(bounds.X - 200, 0));
             clear = new Button(Content.Load<Texture2D>("ClearButton"), new Vector2(bounds.X - 100, 0));
-            linearButton = new Button(Content.Load<Texture2D>("LinearButton"), pointMaker.Location);
+
 
             arrangementLabel = new ButtonLabel(new Button(Content.Load<Texture2D>("Short Highlight"), new Vector2(gridWidth + 259, run.Image.Height + 300),
                                                           Color.Transparent, 0, SpriteEffects.None, Vector2.Zero, 1, 1, Color.White, Color.LightGray),
@@ -177,7 +188,7 @@ namespace Bezier_Visualizer
 
             base.Update(gameTime);
             ms = Mouse.GetState();
-            ks = Keyboard.GetState();           
+            ks = Keyboard.GetState();
 
             var mousePos = new Vector2(ms.Position.X, ms.Position.Y);
             var mouseDown = ms.LeftButton == ButtonState.Pressed;
@@ -188,21 +199,28 @@ namespace Bezier_Visualizer
             #region drawing
             if (bezier != null)
             {
-                var oldLocation = drawnLine.Location;                
-                drawnLine.Location = bezier.Location + offSet;
-
-                if (drawnLine.Location != oldLocation)
+                if (displayType == DisplayType.TimeXPosition)
                 {
-                    if (drawnPoints.Count > 0)
-                    {
-                        drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
-                        drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
-                        drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
-                        drawnPoints.Add(drawnSegment.Clone());
-                    }
+                    var oldLocation = drawnLine.Location;
+                    drawnLine.Location = bezier.Location + offSet;
 
-                    drawnPoints.Add(drawnLine.Clone());
-                    drawnPoints.ColorPoints(Color.DarkOrange);
+                    if (drawnLine.Location != oldLocation)
+                    {
+                        if (drawnPoints.Count > 0)
+                        {
+                            drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
+                            drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
+                            drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
+                            drawnPoints.Add(drawnSegment.Clone());
+                        }
+
+                        drawnPoints.Add(drawnLine.Clone());
+                        drawnPoints.ColorPoints(Color.DarkOrange);
+                    }
+                }
+                else if (displayType == DisplayType.LinearPosition)
+                {
+
                 }
                 bezier.Update(gameTime);
             }
@@ -211,7 +229,7 @@ namespace Bezier_Visualizer
                 drawnLine.Location = new Vector2(-1000);
                 drawnPoints = new List<Sprite>();
             }
-            
+
             if (shouldRun)
             {
                 RunBlock(mousePos, mouseDown, midDown);
@@ -277,38 +295,56 @@ namespace Bezier_Visualizer
             #endregion
 
             #region topButtons
-
-            if (pointMaker.check(mousePos, mouseDown) && !prevDown && bezier == null)
-            {
-                if (draggedPoint == null)
+            if (pointMaker.check(mousePos, mouseDown) && !prevDown)
+            {                
+                if (bezier == null)
                 {
-                    SetDraggedPoint(mousePos);
+                    if (draggedPoint == null)
+                    {
+                        SetDraggedPoint(mousePos);
+                    }
+                    selectedPoint = null;
+                    grabbedIndex = -1;
                 }
-                selectedPoint = null;
-                grabbedIndex = -1;
+                else
+                {
+                    shouldRun = true;
+                    bezier = null;
+
+                    if (displayType == DisplayType.LinearPosition)
+                    {
+                        displayType = 0;
+                    }
+                    else
+                    {
+                        displayType++;
+                    }
+                }
             }
             else if (delete.check(mousePos, mouseDown))
             {
-                if (bezier != null)
-                {
-                    bezier = null;
-                }
+                bezier = null;
+                pointMaker.Image = MakeButttxt;
+
+
                 DeletePoint();
             }
             else if (clear.check(mousePos, mouseDown))
             {
-                if (bezier != null)
-                {
-                    bezier = null;
-                }
+                bezier = null;
+                pointMaker.Image = MakeButttxt;
+
+
                 points.Clear();
                 indexLabel.SetText("NaN");
             }
-            else if (run.check(mousePos, mouseDown))
+            else if (run.check(mousePos, mouseDown) & !prevDown)
             {
                 shouldRun = true;
                 bezier = null;
+                pointMaker.Image = LinearButttxt;
             }
+
             #endregion
 
             #region pointManagment
@@ -324,7 +360,6 @@ namespace Bezier_Visualizer
                     CheckPoints(mousePos, mouseDown, midDown);
                 }
             }
-
             prevDown = mouseDown;
         }
         #endregion
@@ -357,7 +392,7 @@ namespace Bezier_Visualizer
             {
                 points.RemoveAt(grabbedIndex);
                 selectedPoint = null;
-                grabbedIndex = -1;              
+                grabbedIndex = -1;
             }
         }
 
@@ -455,7 +490,7 @@ namespace Bezier_Visualizer
             }
         }
 
-        bool InputLogic (ButtonLabel label, params ButtonLabel[] others)
+        bool InputLogic(ButtonLabel label, params ButtonLabel[] others)
         {
             if (ks.GetPressedKeys().Length > 0)
             {
@@ -487,7 +522,7 @@ namespace Bezier_Visualizer
                     {
                         label.Label.Add(keyStrings[input][0]);
                     }
-                    
+
                 }
             }
             else
@@ -501,7 +536,7 @@ namespace Bezier_Visualizer
             return true;
         }
 
-        bool SwapArrangment ()
+        bool SwapArrangment()
         {
             var intNumber = (int)newNumber;
             if (intNumber >= 0 && intNumber < points.Count)
@@ -528,7 +563,7 @@ namespace Bezier_Visualizer
             return false;
         }
 
-        bool SetX ()
+        bool SetX()
         {
             if (newNumber >= 0 && newNumber <= 1)
             {
@@ -596,7 +631,6 @@ namespace Bezier_Visualizer
                 graphBackGround.Draw(spriteBatch);
                 indexLabel.Print(spriteBatch);
                 timeLabel.Draw(spriteBatch);
-                pointMaker.Draw(spriteBatch);
 
                 foreach (ScalableSprite line in gridLines)
                 {
@@ -607,7 +641,6 @@ namespace Bezier_Visualizer
             {
                 foreach (var point in drawnPoints)
                 {
-                    linearButton.Draw(spriteBatch);
                     point.Draw(spriteBatch);
                 }
 
@@ -626,6 +659,7 @@ namespace Bezier_Visualizer
             delete.Draw(spriteBatch);
             clear.Draw(spriteBatch);
             run.Draw(spriteBatch);
+            pointMaker.Draw(spriteBatch);
 
             xLabel.Draw(spriteBatch);
             yLabel.Draw(spriteBatch);
