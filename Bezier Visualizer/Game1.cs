@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-
+using System.Linq;
 using System;
 using System.Collections.Generic;
 
@@ -62,6 +62,8 @@ namespace Bezier_Visualizer
 
         float newNumber;
 
+        Sprite numberLine;
+
         Dictionary<ButtonLabel, Func<bool>> mapping;
         Dictionary<Keys, string> keyStrings;
 
@@ -105,6 +107,8 @@ namespace Bezier_Visualizer
             gridLines.Add(midBeam);
             midBeam = new ScalableSprite(Content.Load<Texture2D>("Pixel"), new Vector2(535, 0), Color.Black, 0, SpriteEffects.None, new Vector2(.5f, 0), new Vector2(10, 1080), 1);
             gridLines.Add(midBeam);
+
+            numberLine = new Sprite(Content.Load<Texture2D>("Linear"), new Vector2(0, 0));
 
             int lineAmount = 20;
 
@@ -196,32 +200,37 @@ namespace Bezier_Visualizer
 
             #endregion
 
-            #region drawing
+            #region drawingPoints
             if (bezier != null)
             {
+                Vector2 tempOffSet = Vector2.Zero; ;
                 if (displayType == DisplayType.TimeXPosition)
                 {
-                    var oldLocation = drawnLine.Location;
-                    drawnLine.Location = bezier.Location + offSet;
-
-                    if (drawnLine.Location != oldLocation)
-                    {
-                        if (drawnPoints.Count > 0)
-                        {
-                            drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
-                            drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
-                            drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
-                            drawnPoints.Add(drawnSegment.Clone());
-                        }
-
-                        drawnPoints.Add(drawnLine.Clone());
-                        drawnPoints.ColorPoints(Color.DarkOrange);
-                    }
+                    tempOffSet = offSet;
                 }
                 else if (displayType == DisplayType.LinearPosition)
                 {
-
+                    tempOffSet = new Vector2(bounds.X / 2 - gridWidth / 2, gridWidth);
                 }
+
+
+                var oldLocation = drawnLine.Location;
+                drawnLine.Location = bezier.Location + tempOffSet;
+
+                if (drawnLine.Location != oldLocation)
+                {
+                    if (drawnPoints.Count > 0)
+                    {
+                        drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
+                        drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
+                        drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
+                        drawnPoints.Add(drawnSegment.Clone());
+                    }
+
+                    drawnPoints.Add(drawnLine.Clone());
+                    drawnPoints.ColorPoints(Color.DarkOrange);
+                }
+
                 bezier.Update(gameTime);
             }
             else
@@ -341,8 +350,7 @@ namespace Bezier_Visualizer
             else if (run.check(mousePos, mouseDown) & !prevDown)
             {
                 shouldRun = true;
-                bezier = null;
-                pointMaker.Image = LinearButttxt;
+                bezier = null;                
             }
 
             #endregion
@@ -460,6 +468,7 @@ namespace Bezier_Visualizer
             CancelSelection();
             DeletePoint();
             CheckPoints(mousePos, mouseDown, midDown);
+            
             if (points.Count > 1)
             {
                 double[] pointsX = new double[points.Count];
@@ -471,8 +480,23 @@ namespace Bezier_Visualizer
                     pointsX[i] = coords.X;
                     pointsY[i] = coords.Y;
                 }
-                bezier = new Bezier2D(new Bezier(time, new double[] { 0, 1 }, pointsX),
-                                      new Bezier(time, new double[] { 0, 1 }, pointsY), new Vector2(gridWidth));
+
+                var linear = new double[] { 0, 1 };
+                var none = new double[] { 0, 0 };
+                if (displayType == DisplayType.TimeXPosition)
+                {                    
+                    bezier = new Bezier2D(new Bezier(time, linear, pointsX),
+                                          new Bezier(time, linear, pointsY),
+                                          new Vector2(gridWidth));
+
+                    pointMaker.Image = LinearButttxt;
+                }
+                else
+                {
+                    bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
+                                          new Bezier(time, none, none), 
+                                          new Vector2(gridWidth));
+                }
             }
         }
 
@@ -625,36 +649,6 @@ namespace Bezier_Visualizer
         protected override void Draw(GameTime gameTime)
         {
             spriteBatch.Begin();
-            if (bezier == null)
-            {
-                GraphicsDevice.Clear(Color.SlateGray);
-                graphBackGround.Draw(spriteBatch);
-                indexLabel.Print(spriteBatch);
-                timeLabel.Draw(spriteBatch);
-
-                foreach (ScalableSprite line in gridLines)
-                {
-                    line.Draw(spriteBatch);
-                }
-            }
-            else
-            {
-                foreach (var point in drawnPoints)
-                {
-                    point.Draw(spriteBatch);
-                }
-
-            }
-
-            foreach (Sprite point in points)
-            {
-                point.Draw(spriteBatch);
-            }
-
-            if (draggedPoint != null)
-            {
-                draggedPoint.Draw(spriteBatch);
-            }
 
             delete.Draw(spriteBatch);
             clear.Draw(spriteBatch);
@@ -667,8 +661,56 @@ namespace Bezier_Visualizer
 
             settingsBox.Draw(spriteBatch);
 
+            if (bezier == null || displayType == DisplayType.LinearPosition)
+            {
+                GraphicsDevice.Clear(Color.SlateGray);
+                graphBackGround.Draw(spriteBatch);
+                indexLabel.Print(spriteBatch);
+                timeLabel.Draw(spriteBatch);
+
+                foreach (ScalableSprite line in gridLines)
+                {
+                    line.Draw(spriteBatch);
+                }
+
+                DrawPoints();
+
+                if (bezier != null)
+                {
+                    numberLine.Draw(spriteBatch);
+                    DrawLine();
+                }
+            }
+            else
+            {
+                DrawLine();
+                DrawPoints();
+            }
+            
+
+            if (draggedPoint != null)
+            {
+                draggedPoint.Draw(spriteBatch);
+            }
+
+
             spriteBatch.End();
             base.Draw(gameTime);
+        }
+
+        void DrawPoints()
+        {
+            foreach (Sprite point in points)
+            {
+                point.Draw(spriteBatch);
+            }
+        }
+        void DrawLine()
+        {
+            foreach (var point in drawnPoints)
+            {
+                point.Draw(spriteBatch);
+            }
         }
         #endregion
     }
