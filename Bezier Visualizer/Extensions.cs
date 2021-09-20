@@ -93,6 +93,15 @@ namespace Bezier_Visualizer
             return result;
         }
 
+        public static double[] AllAddBy(this double[] numbers, double addend)
+        {
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                numbers[i] += addend;
+            }
+            return numbers;
+        }
+
         public static Vector2 ConvertPos(this Vector2 location, Vector2 scale, Vector2 offset)
         {
             return (location - offset) / scale;

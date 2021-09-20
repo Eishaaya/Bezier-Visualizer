@@ -493,9 +493,18 @@ namespace Bezier_Visualizer
                 }
                 else
                 {
+                    var max = pointsY.Max();
+                    var min = pointsY.Min();
+                    if (min < 0)
+                    {
+                        pointsY.AllAddBy(min * -1);
+                        max += min * -1;
+                        min = 0;                        
+                    }
+                    float scaling = max - min != 0 ? gridWidth / (float)((max - min)) : 1;
                     bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
                                           new Bezier(time, none, none), 
-                                          new Vector2(gridWidth));
+                                          new Vector2(scaling));
                 }
             }
         }
