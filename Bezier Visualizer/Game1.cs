@@ -203,7 +203,7 @@ namespace Bezier_Visualizer
             #region drawingPoints
             if (bezier != null)
             {
-                Vector2 tempOffSet = Vector2.Zero; ;
+                Vector2 tempOffSet = Vector2.Zero;
                 if (displayType == DisplayType.TimeXPosition)
                 {
                     tempOffSet = offSet;
@@ -493,18 +493,21 @@ namespace Bezier_Visualizer
                 }
                 else
                 {
+                    // Linear
                     var max = pointsY.Max();
                     var min = pointsY.Min();
                     if (min < 0)
                     {
-                        pointsY.AllAddBy(min * -1);
-                        max += min * -1;
+                        var pMin = min * -1;
+                        pointsY.AllAddBy(pMin);
+                        max += pMin;
                         min = 0;                        
                     }
+                    //pointsX.InvertAgainst(1);
                     float scaling = max - min != 0 ? gridWidth / (float)((max - min)) : 1;
                     bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
                                           new Bezier(time, none, none), 
-                                          new Vector2(scaling));
+                                          new Vector2(scaling), Bezier2D.DisplayType.Linear);
                 }
             }
         }

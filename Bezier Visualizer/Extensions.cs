@@ -102,6 +102,15 @@ namespace Bezier_Visualizer
             return numbers;
         }
 
+        public static double[] InvertAgainst(this double[] numbers, double number)
+        {
+            for (int i = 0; i < numbers.Length; i++)
+            {
+                numbers[i] = number - numbers[i];
+            }
+            return numbers;
+        }
+
         public static Vector2 ConvertPos(this Vector2 location, Vector2 scale, Vector2 offset)
         {
             return (location - offset) / scale;

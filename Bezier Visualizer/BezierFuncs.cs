@@ -39,6 +39,13 @@ namespace Bezier_Visualizer
             EaseInOut,
         }
 
+        public enum DisplayType
+        {
+            Linear,
+            TwoD
+        }
+
+        public DisplayType MyType { get; }
         Vector2 multiplyer;
         public float Rotation { get; private set; }
         public Vector2 Location { get; private set; }
@@ -46,7 +53,7 @@ namespace Bezier_Visualizer
         Bezier yCurve;
 
         public static Bezier2D BuildBezier2D(double timeMulti, Vector2 start, Vector2 end, PointType command, int degree = 0)
-        {
+        {            
             //int xFlipper = 1;
             //if (start.X > end.X)
             //{
@@ -68,17 +75,18 @@ namespace Bezier_Visualizer
             }
         }
 
-        public Bezier2D(Bezier xCurve, Bezier yCurve, Vector2 multiplyer)
+        public Bezier2D(Bezier xCurve, Bezier yCurve, Vector2 multiplyer, DisplayType type = DisplayType.TwoD)
         {
             this.xCurve = xCurve;
             this.yCurve = yCurve;
             this.multiplyer = multiplyer;
             UpdateProperties();
+            MyType = type;
         }
 
         public void Update(GameTime gameTime)
         {
-            if (yCurve.Update(gameTime) && xCurve.Update(gameTime))
+            if (yCurve.Update(gameTime, MyType == DisplayType.Linear) && xCurve.Update(gameTime, MyType == DisplayType.Linear))
             {
                 UpdateProperties();
             }
@@ -102,9 +110,9 @@ namespace Bezier_Visualizer
             Update(0);
         }
 
-        public override bool Update(GameTime gameTime)
+        public override bool Update(GameTime gameTime, bool linear)
         {
-            timeBezier.Update(gameTime);
+            timeBezier.Update(gameTime, linear);
             return Update(timeBezier.Location);
         }
     }
@@ -122,9 +130,11 @@ namespace Bezier_Visualizer
             this.points = points;
         }
 
-        public virtual bool Update(GameTime gameTime)
+        public virtual bool Update(GameTime gameTime, bool linear)
         {
+            var oldTime = time;
             time += (gameTime.ElapsedGameTime.TotalMilliseconds) / timeMultiplier / 1000;
+
             if (time > 1)
             {
                 time = 1;
@@ -134,7 +144,18 @@ namespace Bezier_Visualizer
                 time = 0;
                 return false;
             }
-            Location = BezierFuncs.Get().BezierCalc(points, time);
+            var previous = Location;
+            Location = BezierFuncs.Get().BezierCalc(points, time); //issue somewhere here
+
+            if(linear)
+            {
+                var oldLocationPoint = new DualDouble(previous, oldTime);
+                var locationPoint = new DualDouble(Location, time);
+
+                var slope = (oldLocationPoint.Y - locationPoint.Y) / (oldLocationPoint.X - locationPoint.X);
+                Location = BezierFuncs.Get().BezierCalc(points, time);
+            }
+
             return true;
         }
          
