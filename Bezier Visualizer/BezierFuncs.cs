@@ -84,6 +84,11 @@ namespace Bezier_Visualizer
             MyType = type;
         }
 
+        public bool TimeTravels()
+        {
+            return xCurve.TimeTravels() || yCurve.TimeTravels();
+        }
+
         public void Update(GameTime gameTime)
         {
             if (yCurve.Update(gameTime, MyType == DisplayType.Linear) && xCurve.Update(gameTime, MyType == DisplayType.Linear))
@@ -101,13 +106,13 @@ namespace Bezier_Visualizer
 
     class Bezier : HalfBezier
     {
-        HalfBezier timeBezier;
+        HalfBezier timeBezier;        
 
         public Bezier(double timeMulti, double[] timepoints, double[] points)
             : base(1, points)
         {
             timeBezier = new HalfBezier(timeMulti, timepoints);
-            Update(0);
+            Update(0);            
         }
 
         public override bool Update(GameTime gameTime, bool linear)
@@ -115,9 +120,24 @@ namespace Bezier_Visualizer
             timeBezier.Update(gameTime, linear);
             return Update(timeBezier.Location);
         }
+
+        public bool TimeTravels()
+        {
+            var prevPoint = points[0];
+            foreach (var point in points)
+            {
+                if (prevPoint > point)
+                {
+                    return true;
+                }
+                prevPoint = point;
+            }
+            return false;
+        }
     }
     class HalfBezier
     {
+        bool first;
         protected double timeMultiplier;
         protected double time;
         protected double[] points;
@@ -128,6 +148,7 @@ namespace Bezier_Visualizer
             this.time = 0;
             timeMultiplier = timeMulti;
             this.points = points;
+            first = false;
         }
 
         public virtual bool Update(GameTime gameTime, bool linear)
@@ -151,11 +172,16 @@ namespace Bezier_Visualizer
             {
                 var oldLocationPoint = new DualDouble(previous, oldTime);
                 var locationPoint = new DualDouble(Location, time);
+                
+                double slope = (oldLocationPoint.Y - locationPoint.Y + double.Epsilon) / (oldLocationPoint.X - locationPoint.X + double.Epsilon);
+                if (first)
+                {
+                    slope = 0;
+                }
 
-                var slope = (oldLocationPoint.Y - locationPoint.Y) / (oldLocationPoint.X - locationPoint.X);
-                Location = BezierFuncs.Get().BezierCalc(points, time);
+                Location = BezierFuncs.Get().BezierCalc(points, slope);
             }
-
+             
             return true;
         }
          

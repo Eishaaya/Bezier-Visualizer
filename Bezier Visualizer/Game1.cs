@@ -203,19 +203,18 @@ namespace Bezier_Visualizer
             #region drawingPoints
             if (bezier != null)
             {
+                var oldLocation = drawnLine.Location;
                 Vector2 tempOffSet = Vector2.Zero;
                 if (displayType == DisplayType.TimeXPosition)
                 {
-                    tempOffSet = offSet;
+                    drawnLine.Location = bezier.Location + offSet;
                 }
                 else if (displayType == DisplayType.LinearPosition)
                 {
-                    tempOffSet = new Vector2(bounds.X / 2 - gridWidth / 2, gridWidth);
+                    drawnLine.Location = bezier.Location + new Vector2(bounds.X / 2 - gridWidth / 2, gridWidth);
                 }
 
 
-                var oldLocation = drawnLine.Location;
-                drawnLine.Location = bezier.Location + tempOffSet;
 
                 if (drawnLine.Location != oldLocation)
                 {
@@ -325,7 +324,7 @@ namespace Bezier_Visualizer
                         displayType = 0;
                     }
                     else
-                    {
+                    {                        
                         displayType++;
                     }
                 }
@@ -483,6 +482,7 @@ namespace Bezier_Visualizer
 
                 var linear = new double[] { 0, 1 };
                 var none = new double[] { 0, 0 };
+
                 if (displayType == DisplayType.TimeXPosition)
                 {                    
                     bezier = new Bezier2D(new Bezier(time, linear, pointsX),
@@ -508,6 +508,11 @@ namespace Bezier_Visualizer
                     bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
                                           new Bezier(time, none, none), 
                                           new Vector2(scaling), Bezier2D.DisplayType.Linear);
+                    if (bezier.TimeTravels())
+                    {
+                        displayType = DisplayType.TimeXPosition;
+                        RunBlock(mousePos, mouseDown, midDown);
+                    }
                 }
             }
         }
