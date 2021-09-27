@@ -30,6 +30,7 @@ namespace Bezier_Visualizer
 
         Texture2D MakeButttxt;
         Texture2D LinearButttxt;
+        Texture2D TimeXPosButttxt;
 
         MouseState ms;
         KeyboardState ks;
@@ -127,6 +128,7 @@ namespace Bezier_Visualizer
 
             MakeButttxt = Content.Load<Texture2D>("MakeButton");
             LinearButttxt = Content.Load<Texture2D>("LinearButton");
+            TimeXPosButttxt = Content.Load<Texture2D>("2DButton");
 
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0));
             pointMaker = new Button(MakeButttxt, new Vector2(bounds.X - 300, 0));
@@ -515,6 +517,7 @@ namespace Bezier_Visualizer
                         bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
                                               new Bezier(time, none, none),
                                               new Vector2(scaling), Bezier2D.DisplayType.Linear);
+                        pointMaker.Image = TimeXPosButttxt;
                     }
                 }
             }
