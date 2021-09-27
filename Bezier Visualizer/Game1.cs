@@ -32,6 +32,8 @@ namespace Bezier_Visualizer
         Texture2D LinearButttxt;
         Texture2D TimeXPosButttxt;
 
+        Texture2D darkLinetxt;
+
         MouseState ms;
         KeyboardState ks;
         bool prevDown;
@@ -60,6 +62,7 @@ namespace Bezier_Visualizer
         bool anyKeyPressed;
 
         List<Sprite> drawnPoints;
+        List<Sprite> drawnCheckPoints;
 
         float newNumber;
 
@@ -67,6 +70,8 @@ namespace Bezier_Visualizer
 
         Dictionary<ButtonLabel, Func<bool>> mapping;
         Dictionary<Keys, string> keyStrings;
+
+        Timer OneSecTimer;
 
         public Game1()
         {
@@ -89,11 +94,13 @@ namespace Bezier_Visualizer
             points = new List<Button>();
             gridLines = new List<ScalableSprite>();
             drawnPoints = new List<Sprite>();
+            drawnCheckPoints = new List<Sprite>();
             draggedPoint = null;
             prevDown = false;
             anyKeyPressed = false;
             shouldRun = false;
             grabbedIndex = -1;
+            OneSecTimer = new Timer(1000);
 
             gridWidth = bounds.Y / 2;
             offSet = new Vector2(0, bounds.Y / 4);
@@ -129,6 +136,8 @@ namespace Bezier_Visualizer
             MakeButttxt = Content.Load<Texture2D>("MakeButton");
             LinearButttxt = Content.Load<Texture2D>("LinearButton");
             TimeXPosButttxt = Content.Load<Texture2D>("2DButton");
+
+            darkLinetxt = Content.Load<Texture2D>("DarkLine");
 
             run = new Button(Content.Load<Texture2D>("RunButton"), new Vector2(bounds.X - 400, 0));
             pointMaker = new Button(MakeButttxt, new Vector2(bounds.X - 300, 0));
@@ -220,24 +229,35 @@ namespace Bezier_Visualizer
 
                 if (drawnLine.Location != oldLocation)
                 {
+                    OneSecTimer.Tick(gameTime);
                     if (drawnPoints.Count > 0)
                     {
                         drawnSegment.Location = drawnPoints[drawnPoints.Count - 1].Location;
                         drawnSegment.rotation = (bezier.Rotation) * -1 + MathHelper.PiOver2;
                         drawnSegment.Scale2D = new Vector2(Vector2.Distance(drawnSegment.Location, drawnLine.Location), 1);
-                        drawnPoints.Add(drawnSegment.Clone());
+                        drawnPoints.Add(drawnSegment.Clone());                        
                     }
 
                     drawnPoints.Add(drawnLine.Clone());
+                    if (OneSecTimer.Ready())
+                    {
+                        var tempLine = drawnLine.Clone();                        
+                        tempLine.Origin = new Vector2(15, 15);
+                        tempLine.Image = darkLinetxt;
+                        drawnCheckPoints.Add(tempLine);                        
+                    }
                     drawnPoints.ColorPoints(Color.DarkOrange);
+                    drawnCheckPoints.ColorPoints(Color.DarkOrange);
                 }
 
                 bezier.Update(gameTime);
             }
             else
             {
+                OneSecTimer.Reset();
                 drawnLine.Location = new Vector2(-1000);
                 drawnPoints = new List<Sprite>();
+                drawnCheckPoints = new List<Sprite>();
             }
 
             if (shouldRun)
@@ -740,6 +760,10 @@ namespace Bezier_Visualizer
         void DrawLine()
         {
             foreach (var point in drawnPoints)
+            {
+                point.Draw(spriteBatch);
+            }
+            foreach (var point in drawnCheckPoints)
             {
                 point.Draw(spriteBatch);
             }
