@@ -240,7 +240,7 @@ namespace Bezier_Visualizer
 
             if (shouldRun)
             {
-                RunBlock(mousePos, mouseDown, midDown);
+                RunBlock(mousePos, mouseDown, midDown, gameTime);
                 shouldRun = false;
             }
             #endregion
@@ -462,7 +462,7 @@ namespace Bezier_Visualizer
 
         #region seperatedBlocks
 
-        void RunBlock(Vector2 mousePos, bool mouseDown, bool midDown)
+        void RunBlock(Vector2 mousePos, bool mouseDown, bool midDown, GameTime gameTime)
         {
             CancelSelection();
             DeletePoint();
@@ -484,37 +484,49 @@ namespace Bezier_Visualizer
                 var none = new double[] { 0, 0 };
 
                 if (displayType == DisplayType.TimeXPosition)
-                {                    
-                    bezier = new Bezier2D(new Bezier(time, linear, pointsX),
-                                          new Bezier(time, linear, pointsY),
-                                          new Vector2(gridWidth));
-
-                    pointMaker.Image = LinearButttxt;
+                {
+                    Create2DCurve(linear, pointsX, pointsY);
                 }
                 else
                 {
-                    // Linear
-                    var max = pointsY.Max();
-                    var min = pointsY.Min();
-                    if (min < 0)
-                    {
-                        var pMin = min * -1;
-                        pointsY.AllAddBy(pMin);
-                        max += pMin;
-                        min = 0;                        
-                    }
-                    //pointsX.InvertAgainst(1);
-                    float scaling = max - min != 0 ? gridWidth / (float)((max - min)) : 1;
-                    bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
-                                          new Bezier(time, none, none), 
-                                          new Vector2(scaling), Bezier2D.DisplayType.Linear);
-                    if (bezier.TimeTravels())
+                    var realTime = time;
+                    time = .1f;
+                    Create2DCurve(linear, pointsX, pointsY);
+                    time = realTime;
+                    if (bezier.TimeTravels(gameTime))
                     {
                         displayType = DisplayType.TimeXPosition;
-                        RunBlock(mousePos, mouseDown, midDown);
+                        bezier = null;
+                    }
+                    else
+                    {
+                        // Linear
+                        var max = pointsY.Max();
+                        var min = pointsY.Min();
+                        if (min < 0)
+                        {
+                            var pMin = min * -1;
+                            pointsY.AllAddBy(pMin);
+                            max += pMin;
+                            min = 0;
+                        }
+                        //pointsX.InvertAgainst(1);
+                        float scaling = max - min != 0 ? gridWidth / (float)((max - min)) : 1;
+                        bezier = new Bezier2D(new Bezier(time, pointsX, pointsY),
+                                              new Bezier(time, none, none),
+                                              new Vector2(scaling), Bezier2D.DisplayType.Linear);
                     }
                 }
             }
+        }
+
+        void Create2DCurve(double[] linear, double[] pointsX, double[] pointsY)
+        {
+            bezier = new Bezier2D(new Bezier(time, linear, pointsX),
+                      new Bezier(time, linear, pointsY),
+                      new Vector2(gridWidth));
+
+            pointMaker.Image = LinearButttxt;
         }
 
         void DragLogic(Vector2 mousePos, bool mouseDown)
